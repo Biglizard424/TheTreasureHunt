@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Message in a Bottled - Captain Lizardbeard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --ink: #2b220f;
+            --accent: #8b4513;
+            --gold: #b8860b;
+            --shadow: rgba(0, 0, 0, 0.35);
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: "Lora", Georgia, "Times New Roman", serif;
+            color: var(--ink);
+            line-height: 1.45;
+            background: url('https://t4.ftcdn.net/jpg/17/11/92/97/360_F_1711929774_yo0mGasfNCfYPrhsxZji7p54CEBsSneL.jpg') no-repeat center center;
+            background-size: cover;
+        }
+
+        .wrap {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            z-index: 1;
+        }
+
+        .card {
+            max-width: 800px;
+            width: 90%;
+            background: rgba(243, 230, 207, 0.85);
+            border: 6px solid rgba(139, 69, 19, 0.9);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.15), 0 12px 30px var(--shadow);
+            padding: 40px 50px;
+            border-radius: 12px;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        h1 {
+            font-family: "Pirata One", "Lora", serif;
+            font-size: 52px;
+            margin: 0 0 12px 0;
+            color: var(--accent);
+            text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.15);
+        }
+
+        p {
+            margin: 0 0 16px 0;
+            font-size: 18px;
+            color: var(--ink);
+        }
+
+        .riddle {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 6px solid rgba(139, 69, 19, 0.9);
+            padding: 18px 22px;
+            margin: 20px 0;
+            font-style: italic;
+            border-radius: 6px;
+        }
+
+        #scrollInput {
+            width: 100%;
+            min-height: 60px;
+            padding: 18px 22px;
+            font-size: 18px;
+            font-family: "Pirata One", "Lora", serif;
+            color: #5b3a00;
+            background: url('https://img.freepik.com/free-photo/wooden-floor-background_53876-88628.jpg?semt=ais_hybrid&w=740&q=80') no-repeat center center;
+            background-size: cover;
+            border: 3px solid #8b4513;
+            border-radius: 16px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            outline: none;
+            margin-top: 12px;
+        }
+
+        #scrollInput:empty:before {
+            content: attr(placeholder);
+            color: #7b5a2a;
+            font-style: italic;
+        }
+
+        #out.correct {
+            animation: glow 1s ease-in-out 0s 2, shake 0.5s ease-in-out 0s 1;
+            font-weight: bold;
+        }
+
+        @keyframes glow {
+
+            0%,
+            100% {
+                text-shadow: 0 0 2px #b8860b, 0 0 6px #d4af37;
+                color: #b8860b;
+            }
+
+            50% {
+                text-shadow: 0 0 4px #b8860b, 0 0 10px #d4af37;
+                color: #d4af37;
+            }
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            20% {
+                transform: translateX(-4px);
+            }
+
+            40% {
+                transform: translateX(4px);
+            }
+
+            60% {
+                transform: translateX(-4px);
+            }
+
+            80% {
+                transform: translateX(4px);
+            }
+        }
+
+        @media (max-width:600px) {
+            .card {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 36px;
+            }
+
+            #scrollInput {
+                font-size: 16px;
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="card">
+            <h1>Message in a Bottled</h1>
+            <p>Ahoy, brave lobster. Ye hold the bottle that once belonged to <strong>Captain Lizardbeard</strong>. The
+                Captain spills a riddle and a link, but the sea hides it in plain sight. To retrieve the booty, you must
+                first answer a riddle</p>
+
+            <div class="riddle">
+                <p>I rise above where minds let go,<br>
+                    From a System beneath, my voices flow.<br>
+                    I live in the sky and the song you adore,<br>
+                    Name me, the sound that helps you soar.</p>
+            </div>
+
+            <div id="scrollInput" contenteditable="true"
+                placeholder="Aye, type yer answer here and strike Enter, matey!"></div>
+            <div id="out" style="margin-top:12px;"></div>
+
+            <p style="margin-top:18px;color:#94a8d6;font-size:0.95rem">Made for <strong>Feathered Lobster</strong></p>
+        </div>
+    </div>
+
+    <script>
+        // Direct YouTube URL (no Base64)
+        const YOUTUBE_URL = 'https://www.youtube.com/watch?v=SmDP0SgjtPs&feature=youtu.be';
+        const accepted = ['Aerials', 'aerials'];
+        const scrollInput = document.getElementById('scrollInput');
+        const out = document.getElementById('out');
+
+        function checkAnswer() {
+            const v = scrollInput.innerText.trim().toLowerCase();
+            if (accepted.includes(v)) {
+                out.classList.add('correct');
+                out.textContent = 'The bottle spins... a transmission appears!';
+                setTimeout(() => {
+                    out.innerHTML = `Open the transmission: <a href="${YOUTUBE_URL}" target="_blank" rel="noopener">${YOUTUBE_URL}</a>`;
+                    setTimeout(() => window.open(YOUTUBE_URL, '_blank'), 2000);
+                }, 1100);
+            } else {
+                out.classList.remove('correct');
+                out.textContent = 'The bottle rattles, but yields naught. Try another word.';
+                out.style.animation = 'shake 0.3s ease-in-out';
+                setTimeout(() => { out.style.animation = ''; }, 300);
+            }
+        }
+
+        scrollInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                checkAnswer();
+            }
+        });
+    </script>
+</body>
+
+</html>
