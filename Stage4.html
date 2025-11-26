@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Captain Lizardbeard's Map Puzzle</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Toaster styling */
+        #toaster {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 18px;
+            background: #2b2b2b;
+            color: #f8f8f8;
+            border-radius: 6px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            font-family: sans-serif;
+            z-index: 9999;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+
+    <!-- Toaster -->
+    <div id="toaster"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <script>
+        const map = L.map('map').setView([0, 0], 2);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a>'
+        }).addTo(map);
+
+        const detectionRadius = 5000;
+
+        const locations = [
+            {
+                coords: [55.88497, 37.53444],
+                hint: "Shiver me timbers, this frost be tryin’ to kill me! How do them commie scallywags live in such ice?<br><br>Here be yer next clue:<br><i>From distant shores I sail the tide,<br>Where Lizardbeard makes his home inside.<br>His basement waits, a gift for thee,<br>Click and the next clue ye shall see.</i>"
+            },
+            {
+                coords: [42.193, -71.764],
+                hint: "Here sits the place ye will call home. No complaints and no escape.<br><br>Here be yer next clue:<br><i>Where Lizzy or Chuck hold crown and reign,<br>The lizards’ court awaits, where secrets remain.<br>Within the palace walls the secret lies,<br>Click and the next clue shall meet your eyes.</i>"
+            },
+            {
+                coords: [51.501, -0.141],
+                hint: "I be hearin’ tales that Lizzy still roams the seas o’ the livin’.<br><br>Here be yer next clue:<br><i>Ye own these lands both far and near,<br>The clue lies in the capital here.<br>Within the gardens where green leaves sway,<br>The next hint waits to show ye the way.</i>"
+            },
+            {
+                coords: [-17.827, 31.047],
+                hint: "Why would a sane creature fight for ownership of this forsaken patch of earth?<br><br>Here be yer next clue:<br><i>Now sail ye far to a hidden isle,<br>Where Lizardbeard’s secrets rest in style.<br>Ye’ll find the diary he keeps tucked away,<br>Click and the final clue shall display.</i>"
+            },
+            {
+                coords: [-14.666, 145.448],
+                hint: "Ahoy there mate, it looks like ye've found me diary!<br>Ye must've worked hard to get here so I'll let ye have it, just promise not to read the embarrassing stuff.<br><br><a href=\"https://docs.google.com/document/d/1KdXr71eZrrd45aFaKsvaXqOSiE6exR6B2ke1Ki8pJqw/edit?usp=sharing\" target=\"_blank\">Lizardbeard's Diary</a>"
+            }
+        ];
+
+        const markers = locations.map(loc => {
+            return L.marker(loc.coords).bindPopup(loc.hint);
+        });
+
+        markers.forEach(marker => map.removeLayer(marker));
+
+        // Toaster function
+        function showToaster(message) {
+            const toast = document.getElementById("toaster");
+            toast.innerHTML = message;
+            toast.style.opacity = "1";
+            setTimeout(() => {
+                toast.style.opacity = "0";
+            }, 2500);
+        }
+
+        map.on('click', function (e) {
+            locations.forEach((loc, index) => {
+                const distance = map.distance(e.latlng, loc.coords);
+                if (distance <= detectionRadius && !map.hasLayer(markers[index])) {
+                    markers[index].addTo(map).openPopup();
+                    showToaster("Arrr! Ye found a hidden clue, ye crafty barnacle!");
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

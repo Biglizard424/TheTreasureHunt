@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Captain Lizardbeard's Treasure Puzzle</title>
+    <style>
+        body {
+            font-family: 'Lora', serif;
+            background: url('https://t4.ftcdn.net/jpg/17/11/92/97/360_F_1711929774_yo0mGasfNCfYPrhsxZji7p54CEBsSneL.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #2b220f;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: rgba(243, 230, 207, 0.9);
+            border: 5px solid #8b4513;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            max-width: 800px;
+            width: 90%;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-family: 'Pirata One', serif;
+            font-size: 48px;
+            color: #8b4513;
+            margin-bottom: 16px;
+        }
+
+        p {
+            font-size: 18px;
+        }
+
+        .dropzone {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            gap: 10px;
+        }
+
+        .drop-slot {
+            width: 60px;
+            height: 60px;
+            border: 3px dashed #8b4513;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            cursor: pointer;
+        }
+
+        .pieces {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .piece {
+            width: 60px;
+            height: 60px;
+            font-size: 32px;
+            background: #f3e6cf;
+            border: 3px solid #8b4513;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+        }
+
+        .message {
+            margin-top: 20px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 8px 14px;
+            font-size: 16px;
+            background: #8b4513;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #b8860b;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Captain's Treasure Puzzle</h1>
+        <p>Ahoy! Drag the treasure pieces into the correct order to unlock the Captain's secret chest.</p>
+
+        ```
+        <div class="dropzone">
+            <div class="drop-slot" data-index="0"></div>
+            <div class="drop-slot" data-index="1"></div>
+            <div class="drop-slot" data-index="2"></div>
+            <div class="drop-slot" data-index="3"></div>
+            <div class="drop-slot" data-index="4"></div>
+            <div class="drop-slot" data-index="5"></div>
+        </div>
+
+        <div class="pieces" id="pieces-container">
+            <div class="piece" draggable="true" data-value="⚓">⚓</div>
+            <div class="piece" draggable="true" data-value="🗝️">🗝️</div>
+            <div class="piece" draggable="true" data-value="💰">💰</div>
+            <div class="piece" draggable="true" data-value="🏴‍☠️">🏴‍☠️</div>
+            <div class="piece" draggable="true" data-value="🪝">🪝</div>
+            <div class="piece" draggable="true" data-value="🧭">🧭</div>
+        </div>
+
+        <div class="message" id="message"></div>
+        <button id="clearBtn">Clear / Retry</button>
+        ```
+
+    </div>
+
+    <script>
+        const correctOrder = ["⚓", "🗝️", "💰", "🏴‍☠️", "🪝", "🧭"];
+        let draggedPiece = null;
+        let attempts = 0;
+
+        function shufflePieces() {
+            const container = document.getElementById('pieces-container');
+            for (let i = container.children.length; i >= 0; i--) {
+                container.appendChild(container.children[Math.random() * i | 0]);
+            }
+        }
+
+        function clearSlots() {
+            const slots = document.querySelectorAll('.drop-slot');
+            const container = document.getElementById('pieces-container');
+            slots.forEach(slot => {
+                if (slot.children.length > 0) container.appendChild(slot.children[0]);
+            });
+            document.getElementById('message').textContent = '';
+        }
+
+        document.querySelectorAll('.piece').forEach(piece => {
+            piece.addEventListener('dragstart', (e) => {
+                draggedPiece = e.target;
+            });
+        });
+
+        document.querySelectorAll('.drop-slot').forEach(slot => {
+            slot.addEventListener('dragover', (e) => e.preventDefault());
+            slot.addEventListener('drop', (e) => {
+                e.preventDefault();
+                if (slot.children.length === 0) {
+                    slot.appendChild(draggedPiece);
+                }
+            });
+        });
+
+        function checkPuzzle() {
+            const slots = document.querySelectorAll('.drop-slot');
+            const userOrder = Array.from(slots).map(slot => slot.children[0]?.dataset.value || null);
+            const message = document.getElementById('message');
+            attempts++;
+
+            if (userOrder.every((val, idx) => val === correctOrder[idx])) {
+                message.innerHTML = `Arrr! Ye solved it! Open the chest: <a href="https://replit.com/@YourUsername/YourTreasurePuzzle" target="_blank">Next Stage</a>`;
+            } else if (attempts >= 3) {
+                message.textContent = `That’s not it, matey! Hint: Check the Captain's diary in the previous stage for the right order.`;
+            } else {
+                message.textContent = `Ye got it wrong! Try again. Attempts: ${attempts}`;
+            }
+        }
+
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            clearSlots();
+        });
+
+        document.querySelectorAll('.drop-slot').forEach(slot => {
+            slot.addEventListener('drop', checkPuzzle);
+        });
+
+        // Shuffle pieces at load
+        shufflePieces();
+    </script>
+
+</body>
+
+</html>
