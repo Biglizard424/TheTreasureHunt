@@ -19,7 +19,7 @@ For only the bold and sharp of mind will claim the prize that waits.
 
 ## If ye be ready, then [click here](https://biglizard424.github.io/TheTreasureHunt/Stage1.html) to set sail on yer adventure!
 
-###### PS: Hover on Paco the parrot for a special message.
+###### PS: Hover over Paco the parrot for a special message.
 
 ![Paco][parrot]
 
