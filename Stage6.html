@@ -121,10 +121,10 @@
         <div class="pieces" id="pieces-container">
             <div class="piece" draggable="true" data-value="⚓">⚓</div>
             <div class="piece" draggable="true" data-value="🗝️">🗝️</div>
-            <div class="piece" draggable="true" data-value="💰">💰</div>
-            <div class="piece" draggable="true" data-value="🏴‍☠️">🏴‍☠️</div>
-            <div class="piece" draggable="true" data-value="🪝">🪝</div>
             <div class="piece" draggable="true" data-value="🧭">🧭</div>
+            <div class="piece" draggable="true" data-value="🏴‍☠️">🏴‍☠️</div>
+            <div class="piece" draggable="true" data-value="🌐">🌐</div>
+            <div class="piece" draggable="true" data-value="🚪">🚪</div>
         </div>
 
         ```
@@ -135,7 +135,7 @@
     </div>
 
     <script>
-        const correctOrder = ["⚓", "🗝️", "💰", "🏴‍☠️", "🪝", "🧭"];
+        const correctOrder = ["🚪", "🗝️", "⚓", "🧭", "🏴‍☠️", "🌐",];
         let draggedPiece = null;
         let attempts = 0;
 
@@ -178,7 +178,7 @@
             attempts++;
 
             if (userOrder.every((val, idx) => val === correctOrder[idx])) {
-                message.innerHTML = `Arrr! Ye solved it! Open the chest: <a href="https://replit.com/@YourUsername/YourTreasurePuzzle" target="_blank">Next Stage</a>`;
+                message.innerHTML = `Arrr! Ye solved it! Open the chest: <a href="https://biglizard424.github.io/TheTreasureHunt/Stage7.html" target="_blank">LizardbeardOSe</a>`;
             } else if (attempts >= 3) {
                 message.textContent = `That’s not it, matey! Hint: Check the Captain's diary in the previous stage for the right order.`;
             } else {
