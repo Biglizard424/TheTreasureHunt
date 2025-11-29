@@ -22,18 +22,8 @@
             height: 400px;
             border: 3px solid #fff;
             overflow: hidden;
-            background: none;
-        }
-
-        #bg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
             background: url('https://i.makeagif.com/media/10-21-2017/PE-fCA.gif') no-repeat center center;
             background-size: cover;
-            z-index: 0;
         }
 
         #player {
@@ -116,20 +106,20 @@
 
     <h1>Pirate Cannon Escape</h1>
     <div id="rules">
-        <strong>Yo ho ho and a bottle rum, matey! I spy ye’ve managed to worm yer way through me operatin’ contraption masterpiece. Good on ye, for Lizardbeard be in a right mess.<br> 
-            Steer yer ship with the LEFT and RIGHT arrow keys, dodge the cannon fire, and plunder me pilfered booty. Snag ten pieces of me treasure, and I’ll see fit to reward ye with a treasure fit for a true seadog! <br>
+        <strong>Yo ho ho and a bottle rum, matey! I spy ye’ve managed to worm yer way through me operatin’ contraption masterpiece. Good on ye, for Lizardbeard be in a right mess. Turns out both Lizzy and that demented Russian lass clutch all the blasted copyrights, and they’ve got their eyes on me hide. I be needin’ yer help to wriggle outta this jam.<br><br>Steer yer ship with the LEFT and RIGHT arrow keys, dodge the cannon fire, and plunder me pilfered booty. Snag ten pieces of me treasure, and I’ll see fit to reward ye with a treasure fit for a true seadog! <br>
         <button id="startBtn">Start Game</button>
     </div>
 
     <div id="gameContainer" style="display:none;">
-        <div id="bg"></div>
         <div id="player"></div>
     </div>
 
     <div id="score" style="display:none;">Treasure: 0/10</div>
     <div id="winMessage" style="display:none;">
         <h2>Ahoy! You escaped!</h2>
-        <a id="secretLink" href="#" target="_blank">Blimey! That were a close one. Lizardbeard ain’t goin’ to no prison, no sir! Thanks fer savin’ me hide. As promised, here be a chest o’ treasure for yer reward. Enjoy it, ye scallywag!</a>
+        <strong>Blimey! That were a close one. Lizardbeard ain’t goin’ to no prison, no sir! Thanks fer savin’ me hide. <br> 
+            As promised, here be a chest o’ treasure for yer reward. Enjoy it, ye scallywag!
+        <a id="secretLink" href="#" target="_blank"><br><br>Treasure</a>
     </div>
 
     <script>
