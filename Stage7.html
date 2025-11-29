@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>LizardbeardOS - Pirate Terminal</title>
+    <style>
+        :root {
+            --bg: #050505;
+            --term-bg: #000;
+            --text: #e6e6e6;
+            --muted: #9a9a9a;
+            --prompt: #00ff00;
+            --border: #0f0;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            background: var(--bg);
+            font-family: "Courier New", monospace;
+            color: var(--text);
+        }
+
+        .terminal-frame {
+            box-sizing: border-box;
+            width: 92%;
+            max-width: 1200px;
+            height: 88vh;
+            margin: 18px auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(0deg, rgba(0, 0, 0, 1), rgba(6, 6, 6, 1));
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            gap: 10px;
+        }
+
+        #terminal {
+            flex: 1;
+            overflow: auto;
+            background: var(--term-bg);
+            padding: 12px;
+            border-radius: 4px;
+            box-shadow: inset 0 0 18px rgba(0, 255, 0, 0.02);
+            white-space: pre-wrap;
+        }
+
+        .line {
+            margin: 4px 0;
+            white-space: pre-wrap;
+        }
+
+        .prompt-inline {
+            color: var(--prompt);
+            font-weight: 700;
+            margin-right: 8px;
+        }
+
+        .muted {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        #input-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #prompt {
+            color: var(--prompt);
+            font-weight: 700;
+        }
+
+        #cmd {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-family: "Courier New", monospace;
+            font-size: 15px;
+            flex: 1;
+        }
+
+        #cmd::placeholder {
+            color: #666;
+        }
+
+        .small {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        @media (max-width:600px) {
+            .terminal-frame {
+                width: 98%;
+                height: 92vh;
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="terminal-frame" role="application" aria-label="LizardbeardOS terminal">
+        <div id="terminal" role="log" aria-live="polite"></div>
+        <div id="input-row" aria-hidden="false">
+            <span id="prompt">&lt;lizardbeardOS$&gt;</span>
+            <input id="cmd" autocomplete="off" autocapitalize="off" spellcheck="false"
+                placeholder="Type yer orders, then strike Enter" />
+        </div>
+    </div>
+
+    <script>
+        const FS = {
+            "/": {
+                type: "dir",
+                contents: {
+                    logs: {
+                        type: "dir",
+                        contents: {
+                            "diary.txt": { type: "file", content: "Ye find a torn scrap o' parchment from me diary. FRAGMENT ONE: 4d617031" },
+                            "crew_report.txt": { type: "file", content: "The crew be complainin' about the rations. Useless scribbles otherwise." },
+                            archive: { type: "dir", contents: {} }
+                        }
+                    },
+                    secret: {
+                        type: "dir",
+                        contents: {
+                            "fried_parrot_recipe.txt": { type: "file", content: "The time has come for that feathered bastard. FRAGMENT TWO: 5a7859" },
+                            "mermaidsxxx.txt": { type: "file", content: "Freaky content for freaky pirates. FRAGMENT THREE: 414243" },
+                            junk: { type: "file", content: "Arr, this be nothin' but rotten seaweed pasted to a page." }
+                        }
+                    },
+                    chest: {
+                        type: "dir",
+                        contents: {
+                            "old_note.txt": { type: "file", content: "An old note with faded ink: 'The gulls will guide ye.' (no fragment here)" },
+                            "game_recipet.txt": { type: "file", content: "Cheers fer snatchin’ Assassin’s Creed IV: Black Flag for 40 shiny gold ingots! FRAGMENT FOUR: 536563" }
+                        }
+                    },
+                    scrolls: {
+                        type: "dir",
+                        contents: {
+                            "college_degree.txt": { type: "file", content: "Here ye expect wisdom, but find only moldy crumbs. Worthless!" }
+                        }
+                    }
+                }
+            }
+        };
+
+        let cwd = "/";
+        let inventory = [];
+        let combinedKey = "";
+        const terminal = document.getElementById("terminal");
+        const cmd = document.getElementById("cmd");
+
+        function appendLineText(text, className) {
+            const div = document.createElement("div");
+            div.className = "line" + (className ? " " + className : "");
+            div.textContent = text;
+            terminal.appendChild(div);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+        function appendPromptedCommand(cmdText) {
+            const div = document.createElement("div");
+            div.className = "line";
+            const span = document.createElement("span");
+            span.className = "prompt-inline";
+            span.textContent = "<lizardbeardOS$>";
+            div.appendChild(span);
+            div.appendChild(document.createTextNode(" " + cmdText));
+            terminal.appendChild(div);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function resolve(path) {
+            if (!path || path === "/") return FS["/"];
+            const parts = path.split("/").filter(Boolean);
+            let node = FS["/"];
+            for (const p of parts) {
+                if (!node.contents || !node.contents[p]) return null;
+                node = node.contents[p];
+            }
+            return node;
+        }
+        function listDir(path) {
+            const node = resolve(path);
+            if (!node || node.type !== "dir") return null;
+            return Object.keys(node.contents || {});
+        }
+        function findFileByName(name) {
+            let found = null;
+            function seek(node) {
+                if (found) return;
+                for (const k of Object.keys(node.contents || {})) {
+                    const ch = node.contents[k];
+                    if (ch.type === "file" && k === name) { found = { node: ch, name: k }; return; }
+                    if (ch.type === "dir") seek(ch);
+                    if (found) return;
+                }
+            }
+            seek(FS["/"]);
+            return found;
+        }
+
+        function cmd_start() {
+            appendLineText("Booting LizardbeardOS... Ye be on pirated pirate software. Use 'help' to see commands.");
+        }
+        function cmd_ls() {
+            const node = resolve(cwd);
+            if (!node) { appendLineText("This be a cursed path."); return; }
+            const names = Object.keys(node.contents || {});
+            if (names.length === 0) { appendLineText("There be nothin' here but dust an' regret."); return; }
+            appendLineText(names.join("    "));
+        }
+        function cmd_cd(arg) {
+            if (!arg) { appendLineText("Specify a folder to board, matey."); return; }
+            if (arg === "..") {
+                if (cwd === "/") return;
+                const parts = cwd.split("/").filter(Boolean);
+                parts.pop();
+                cwd = parts.length === 0 ? "/" : "/" + parts.join("/");
+                return;
+            }
+            const node = resolve(cwd);
+            if (!node || !node.contents[arg] || node.contents[arg].type !== "dir") {
+                appendLineText("Nay, that hold be not found on this vessel.");
+                return;
+            }
+            cwd = cwd === "/" ? `/${arg}` : `${cwd}/${arg}`;
+            appendLineText("Ye enter " + arg + ".");
+        }
+        function cmd_open(name) {
+            if (!name) { appendLineText("Open what, ye stinking rat?"); return; }
+            const node = resolve(cwd);
+            if (!node || !node.contents[name] || node.contents[name].type !== "file") {
+                appendLineText("Ye be tryin' to read what don't exist.");
+                return;
+            }
+            appendLineText(node.contents[name].content);
+        }
+        function cmd_add(name) {
+            if (!name) { appendLineText("Specify the file to add to yer satchel."); return; }
+            const node = resolve(cwd);
+            if (!node || !node.contents[name] || node.contents[name].type !== "file") {
+                appendLineText("Ye can't be addin' nonexistant booty.");
+                return;
+            }
+            const content = node.contents[name].content || "";
+            const m = content.match(/([0-9A-Fa-f]{6,})/);
+            if (!m) { appendLineText("That scrap holds no magic nor meaning."); return; }
+            if (inventory.includes(name)) { appendLineText("Ye already stashed that scrap, matey."); return; }
+            inventory.push(name);
+            appendLineText("'" + name + "' has been tucked into yer satchel.");
+        }
+        function cmd_inventory() {
+            if (inventory.length === 0) { appendLineText("Ye pockets be empty."); return; }
+            appendLineText("Inventory: " + inventory.join(", "));
+        }
+        function extractHexFromFile(filename) {
+            const f = findFileByName(filename);
+            if (!f) return null;
+            const content = f.node.content || "";
+            const m = content.match(/([0-9A-Fa-f]{6,})/);
+            return m ? m[1] : null;
+        }
+        function hexToAscii(hex) {
+            hex = hex.replace(/[^0-9A-Fa-f]/g, "");
+            let out = "";
+            for (let i = 0; i < hex.length; i += 2) {
+                const part = hex.substr(i, 2);
+                if (part.length < 2) break;
+                out += String.fromCharCode(parseInt(part, 16));
+            }
+            return out;
+        }
+        function cmd_combine() {
+            const order = ["diary.txt", "fried_parrot_recipe.txt", "mermaidsxxx.txt", "game_recipet.txt"];
+            for (const f of order) {
+                if (!inventory.includes(f)) {
+                    appendLineText("Ye be missin' pieces. Search every hold and add them first.");
+                    return;
+                }
+            }
+            const fragments = [];
+            for (const f of order) {
+                const hx = extractHexFromFile(f);
+                if (!hx) { appendLineText("Couldn't parse fragment from " + f); return; }
+                fragments.push(hx);
+            }
+            const hexCombined = fragments.join("");
+            combinedKey = hexCombined.toLowerCase();
+            let ascii = "(unable to decode)";
+            try { ascii = hexToAscii(hexCombined); } catch (e) { }
+            appendLineText("Ye forge the fragments into a key: " + hexCombined);
+        }
+        function cmd_decrypt(arg) {
+            if (!arg) { appendLineText("Provide a key to decrypt the treasure, ye rotten monkey."); return; }
+            if (!combinedKey) { appendLineText("Ye must combine fragments first."); return; }
+            if (arg === combinedKey) {
+                appendLineText("Ye decrypted the treasure link!");
+                appendLink("https://biglizard424.github.io/TheTreasureHunt/Stage8.html", "https://biglizard424.github.io/TheTreasureHunt/Stage8.html");
+            } else {
+                appendLineText("Incorrect key. The bones of the map tremble not.");
+            }
+        }
+
+        function appendLink(text, url) {
+            const div = document.createElement("div");
+            div.className = "line";
+            const span = document.createElement("span");
+            span.className = "prompt-inline";
+            span.textContent = "<lizardbeardOS$>";
+            div.appendChild(span);
+            const a = document.createElement("a");
+            a.href = url;
+            a.textContent = text;
+            a.target = "_blank";
+            a.style.color = "#00ff00";
+            div.appendChild(document.createTextNode(" "));
+            div.appendChild(a);
+            terminal.appendChild(div);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function cmd_help() {
+            appendLineText("Available commands:");
+            appendLineText("  start            - Begin yer voyage");
+            appendLineText("  ls               - List the loot in this place");
+            appendLineText("  cd <dir>         - Change directory (use .. to go up)");
+            appendLineText("  open <file>      - Read a file's contents");
+            appendLineText("  add <file>       - Add a fragment file to yer inventory");
+            appendLineText("  inventory        - Show what ye've collected");
+            appendLineText("  combine          - Combine collected fragments into a key");
+            appendLineText("  decrypt <key>    - Decrypt the final treasure link");
+            appendLineText("  hint             - A gentle nudge if ye be lost");
+            appendLineText("  help             - Show this help");
+            appendLineText("  restart          - Reset the deck and all progress");
+            appendLineText("  quit             - shutdown lizardbeardOS");
+        }
+        function cmd_hint() {
+            if (inventory.length < 1) {
+                appendLineText("Hint: Start in logs and hidden holds — not every scrap be useful.");
+            } else if (inventory.length < 3) {
+                appendLineText("Hint: Ye have some pieces. More lie hidden — check 'hidden' and 'chest'.");
+            } else if (!combinedKey) {
+                appendLineText("Hint: Use combine once ye have all pieces, then decrypt the key.");
+            } else {
+                appendLineText("Hint: Pass the combined hex string to decrypt (exact match).");
+            }
+        }
+        function cmd_restart() {
+            cwd = "/";
+            inventory = [];
+            combinedKey = "";
+            terminal.innerHTML = "";
+            welcome();
+        }
+        function processInput(raw) {
+            if (!raw) return;
+            appendPromptedCommand(raw);
+            const parts = raw.trim().split(/\s+/);
+            const command = parts[0].toLowerCase();
+            const arg = parts.slice(1).join(" ");
+            switch (command) {
+                case "start": cmd_start(); break;
+                case "ls": cmd_ls(); break;
+                case "cd": cmd_cd(arg); break;
+                case "open": cmd_open(arg); break;
+                case "add": cmd_add(arg); break;
+                case "inventory": cmd_inventory(); break;
+                case "combine": cmd_combine(); break;
+                case "decrypt": cmd_decrypt(arg); break;
+                case "help": cmd_help(); break;
+                case "hint": cmd_hint(); break;
+                case "restart": cmd_restart(); break;
+                case "quit": appendLineText("Ye can't run from this adventure, scallywag."); break;
+                default: appendLineText("Arr, that command be unknown sorcery. Try 'help'.");
+            }
+        }
+        function welcome() {
+            appendLineText("Booting LizardbeardOS...");
+            appendLineText("Welcome, desperate healer turned treasure seeker. Ye must scour the ship for fragments.");
+            appendLineText("Start by typing: start");
+            appendLineText("");
+        }
+        cmd.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                const v = cmd.value;
+                cmd.value = "";
+                processInput(v);
+            }
+        });
+        welcome();
+        cmd.focus();
+    </script>
+</body>
+
+</html>
