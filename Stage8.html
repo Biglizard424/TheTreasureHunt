@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pirate Cannon Escape</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #004080;
+            color: #fff;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        #gameContainer {
+            position: relative;
+            margin: auto;
+            width: 600px;
+            height: 400px;
+            border: 3px solid #fff;
+            overflow: hidden;
+            background: url('https://i.makeagif.com/media/10-21-2017/PE-fCA.gif') no-repeat center center;
+            background-size: cover;
+        }
+
+        #player {
+            position: absolute;
+            bottom: 20px;
+            left: 270px;
+            width: 60px;
+            height: 60px;
+            background: url('https://i.pinimg.com/736x/3a/12/f5/3a12f5761d17dd05c1c7f57724c3c0a5.jpg') no-repeat center center;
+            background-size: contain;
+            z-index: 2;
+        }
+
+        .enemy {
+            position: absolute;
+            top: 0;
+            width: 60px;
+            height: 60px;
+            background: url('https://png.pngtree.com/png-clipart/20220125/ourmid/pngtree-original-cartoon-pirate-ship-illustration-png-image_4267908.png') no-repeat center center;
+            background-size: contain;
+            z-index: 2;
+        }
+
+        .cannonball {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: url('https://cdn.imgbin.com/4/17/15/imgbin-round-shot-bomb-human-cannonball-cannon-ball-s-9yMVj481FBd3iRR9XrD5MVjGP.jpg') no-repeat center center;
+            background-size: contain;
+            z-index: 2;
+        }
+
+        .treasure {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: url('https://png.pngtree.com/png-vector/20201224/ourmid/pngtree-cartoon-hand-drawn-vector-treasure-chest-png-image_2626655.jpg') no-repeat center center;
+            background-size: contain;
+            z-index: 2;
+        }
+
+        .explosion {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: url('https://www.citypng.com/public/uploads/preview/hd-comic-cartoon-explosion-effect-png-701751694878373x4b4qdqvwq.png?v=2025081701') no-repeat center center;
+            background-size: contain;
+            z-index: 3;
+            animation: explode 0.5s forwards;
+        }
+
+        @keyframes explode {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+
+        #score,
+        #rules {
+            margin: 10px;
+            font-size: 20px;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Pirate Cannon Escape</h1>
+    <div id="rules">
+        <strong>Yo ho ho and a bottle rum, matey! I spy ye’ve managed to worm yer way through me operatin’ contraption masterpiece. Good on ye, for Lizardbeard be in a right mess.<bf> 
+            Turns out both Lizzy and that demented Russian lass clutch all the blasted copyrights, and they’ve got their eyes on me hide. I be needin’ yer help to wriggle outta this jam.<br><br>
+            Steer yer ship with the LEFT and RIGHT arrow keys, dodge the cannon fire, and plunder me pilfered booty. Snag ten pieces of me treasure, and I’ll see fit to reward ye with a treasure fit for a true seadog! <br>
+        <button id="startBtn">Start Game</button>
+    </div>
+
+    <div id="gameContainer" style="display:none;">
+        <div id="player"></div>
+    </div>
+
+    <div id="score" style="display:none;">Treasure: 0/10</div>
+    <div id="winMessage" style="display:none;">
+        <h2>Ahoy! You escaped!</h2>
+        <a id="secretLink" href="#" target="_blank">Blimey! That were a close one. Lizardbeard ain’t goin’ to no prison, no sir! Thanks fer savin’ me hide. As promised, here be a chest o’ treasure for yer reward. Enjoy it, ye scallywag!</a>
+    </div>
+
+    <script>
+        const gameContainer = document.getElementById('gameContainer');
+        const player = document.getElementById('player');
+        const startBtn = document.getElementById('startBtn');
+        const rules = document.getElementById('rules');
+        const scoreDisplay = document.getElementById('score');
+        const winMessage = document.getElementById('winMessage');
+        const secretLink = document.getElementById('secretLink');
+
+        let playerPos = 270;
+        let treasuresCollected = 0;
+        let enemies = [];
+        let cannonballs = [];
+        let treasures = [];
+        let gameInterval;
+        let enemyInterval;
+        let cannonInterval;
+        let treasureInterval;
+        let gameSpeed = 1.75; // slower starting speed for easier play
+        let keys = {};
+
+        function startGame() {
+            rules.style.display = 'none';
+            gameContainer.style.display = 'block';
+            scoreDisplay.style.display = 'block';
+            scoreDisplay.textContent = `Treasure: 0/10`;
+            treasuresCollected = 0;
+            enemies = [];
+            cannonballs = [];
+            treasures = [];
+            playerPos = 270;
+            player.style.left = playerPos + 'px';
+            gameSpeed = 1.5;
+
+            gameInterval = setInterval(gameLoop, 20);
+            enemyInterval = setInterval(spawnEnemy, 2250); 
+            cannonInterval = setInterval(spawnCannonball, 1250); 
+            treasureInterval = setInterval(spawnTreasure, 3000);
+        }
+
+        function endGame(win = false) {
+            clearInterval(gameInterval);
+            clearInterval(enemyInterval);
+            clearInterval(cannonInterval);
+            clearInterval(treasureInterval);
+            enemies.forEach(e => gameContainer.removeChild(e));
+            cannonballs.forEach(c => gameContainer.removeChild(c));
+            treasures.forEach(t => gameContainer.removeChild(t));
+            enemies = [];
+            cannonballs = [];
+            treasures = [];
+            if (win) {
+                gameContainer.style.display = 'none';
+                scoreDisplay.style.display = 'none';
+                winMessage.style.display = 'block';
+                secretLink.href = "https://docs.google.com/presentation/d/1pOz1FYyXzuyk7L43lqaPFqC2RzKvuW6KdMu1FI1gVvc/edit?usp=sharing"; 
+            } else {
+                createExplosion(playerPos, 340);
+                alert('Ye got hit! Try again, matey!');
+                rules.style.display = 'block';
+                gameContainer.style.display = 'none';
+            }
+        }
+
+        function spawnEnemy() {
+            const enemy = document.createElement('div');
+            enemy.classList.add('enemy');
+            enemy.style.left = Math.random() * 540 + 'px';
+            enemy.y = 0;
+            gameContainer.appendChild(enemy);
+            enemies.push(enemy);
+        }
+
+        function spawnCannonball() {
+            enemies.forEach(enemy => {
+                const cannon = document.createElement('div');
+                cannon.classList.add('cannonball');
+                cannon.style.left = parseInt(enemy.style.left) + 20 + 'px';
+                cannon.style.top = '60px';
+                cannon.y = 60;
+                gameContainer.appendChild(cannon);
+                cannonballs.push(cannon);
+            });
+        }
+
+        function spawnTreasure() {
+            const treasure = document.createElement('div');
+            treasure.classList.add('treasure');
+            treasure.style.left = Math.random() * 560 + 'px';
+            treasure.y = 0;
+            gameContainer.appendChild(treasure);
+            treasures.push(treasure);
+        }
+
+        function createExplosion(x, y) {
+            const explosion = document.createElement('div');
+            explosion.classList.add('explosion');
+            explosion.style.left = x + 'px';
+            explosion.style.top = y + 'px';
+            gameContainer.appendChild(explosion);
+            setTimeout(() => gameContainer.removeChild(explosion), 500);
+        }
+
+        function gameLoop() {
+            // Move player
+            if (keys['ArrowLeft']) playerPos -= 5;
+            if (keys['ArrowRight']) playerPos += 5;
+
+            // Clamp player position to stay within bounds
+            playerPos = Math.max(0, Math.min(540, playerPos));
+            player.style.left = playerPos + 'px';
+
+            // Move enemies
+            enemies.forEach(e => {
+                e.y += gameSpeed;
+                e.style.top = e.y + 'px';
+                if (e.y > 400) {
+                    gameContainer.removeChild(e);
+                    enemies.splice(enemies.indexOf(e), 1);
+                }
+            });
+
+            // Move cannonballs
+            cannonballs.forEach(c => {
+                c.y += gameSpeed; // slightly slower cannonball speed
+                c.style.top = c.y + 'px';
+                if (c.y > 400) {
+                    gameContainer.removeChild(c);
+                    cannonballs.splice(cannonballs.indexOf(c), 1);
+                }
+                if (c.y + 20 > 340 && c.y < 400 && playerPos < parseInt(c.style.left) + 20 && playerPos + 60 > parseInt(c.style.left)) {
+                    createExplosion(playerPos, 340);
+                    endGame();
+                }
+            });
+
+            // Move treasures
+            treasures.forEach(t => {
+                t.y += gameSpeed;
+                t.style.top = t.y + 'px';
+                if (t.y > 400) {
+                    gameContainer.removeChild(t);
+                    treasures.splice(treasures.indexOf(t), 1);
+                }
+                if (t.y + 40 > 340 && t.y < 400 && playerPos < parseInt(t.style.left) + 40 && playerPos + 60 > parseInt(t.style.left)) {
+                    treasuresCollected++;
+                    scoreDisplay.textContent = `Treasure: ${treasuresCollected}/10`;
+                    gameContainer.removeChild(t);
+                    treasures.splice(treasures.indexOf(t), 1);
+                    if (treasuresCollected >= 10) endGame(true);
+                }
+            });
+
+            gameSpeed += 0.0005; // slower speed increase for easier gameplay
+        }
+
+        document.addEventListener('keydown', (e) => keys[e.key] = true);
+        document.addEventListener('keyup', (e) => keys[e.key] = false);
+        startBtn.addEventListener('click', startGame);
+    </script>
+
+</body>
+
+</html>
