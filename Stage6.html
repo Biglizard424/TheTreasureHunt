@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
@@ -108,7 +107,6 @@
         <h1>Captain's Treasure Puzzle</h1>
         <p>Ahoy! Drag the treasure pieces into the correct order to unlock the Captain's secret chest.</p>
 
-        ```
         <div class="dropzone">
             <div class="drop-slot" data-index="0"></div>
             <div class="drop-slot" data-index="1"></div>
@@ -127,17 +125,16 @@
             <div class="piece" draggable="true" data-value="🚪">🚪</div>
         </div>
 
-        ```
-
         <div class="message" id="message"></div>
         <button id="clearBtn">Clear / Retry</button>
 
     </div>
 
     <script>
-        const correctOrder = ["🚪", "🗝️", "⚓", "🧭", "🏴‍☠️", "🌐",];
+        const correctOrder = ["🚪", "🗝️", "⚓", "🧭", "🏴‍☠️", "🌐"];
         let draggedPiece = null;
-        let attempts = 0;
+
+        document.getElementById('clearBtn').style.display = 'none';
 
         function shufflePieces() {
             const container = document.getElementById('pieces-container');
@@ -153,6 +150,7 @@
                 if (slot.children.length > 0) container.appendChild(slot.children[0]);
             });
             document.getElementById('message').textContent = '';
+            document.getElementById('clearBtn').style.display = 'none';
         }
 
         document.querySelectorAll('.piece').forEach(piece => {
@@ -167,6 +165,7 @@
                 e.preventDefault();
                 if (slot.children.length === 0) {
                     slot.appendChild(draggedPiece);
+                    checkPuzzle();
                 }
             });
         });
@@ -175,14 +174,20 @@
             const slots = document.querySelectorAll('.drop-slot');
             const userOrder = Array.from(slots).map(slot => slot.children[0]?.dataset.value || null);
             const message = document.getElementById('message');
-            attempts++;
+
+            const filledCount = userOrder.filter(Boolean).length;
+
+            if (filledCount < correctOrder.length) {
+                message.textContent = "Hint: Check the Captain's diary in the previous stage for the right order.";
+                return;
+            }
 
             if (userOrder.every((val, idx) => val === correctOrder[idx])) {
                 message.innerHTML = `Arrr! Ye solved it! Open the chest: <a href="https://biglizard424.github.io/TheTreasureHunt/Stage7.html" target="_blank">LizardbeardOS</a>`;
-            } else if (attempts >= 3) {
-                message.textContent = `Hint: Check the Captain's diary in the previous stage for the right order.`;
+                document.getElementById('clearBtn').style.display = 'none';
             } else {
-                message.textContent = `Ye got it wrong! Try again. Attempts: ${attempts}`;
+                message.textContent = "Ye placed all the pieces but the order be wrong, matey. Use Clear to try again.";
+                document.getElementById('clearBtn').style.display = 'inline-block';
             }
         }
 
@@ -190,11 +195,6 @@
             clearSlots();
         });
 
-        document.querySelectorAll('.drop-slot').forEach(slot => {
-            slot.addEventListener('drop', checkPuzzle);
-        });
-
-        // Shuffle pieces at load
         shufflePieces();
     </script>
 
