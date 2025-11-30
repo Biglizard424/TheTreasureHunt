@@ -75,6 +75,7 @@
             animation: explode 0.5s forwards;
         }
 
+
         @keyframes explode {
             0% {
                 transform: scale(1);
@@ -99,6 +100,12 @@
             font-size: 16px;
             cursor: pointer;
         }
+
+        #secretLink {
+            color: gold;
+            text-decoration: underline;
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -106,8 +113,13 @@
 
     <h1>Pirate Cannon Escape</h1>
     <div id="rules">
-        <strong>Yo ho ho and a bottle rum, matey! I spy ye’ve managed to worm yer way through me operatin’ contraption masterpiece. Good on ye, for Lizardbeard be in a right mess. Turns out both Lizzy and that demented Russian lass clutch all the blasted copyrights, and they’ve got their eyes on me hide. I be needin’ yer help to wriggle outta this jam.<br><br>Steer yer ship with the LEFT and RIGHT arrow keys, dodge the cannon fire, and plunder me pilfered booty. Snag ten pieces of me treasure, and I’ll see fit to reward ye with a treasure fit for a true seadog! <br>
-        <button id="startBtn">Start Game</button>
+        <strong>Yo ho ho and a bottle rum, matey! I spy ye’ve managed to worm yer way through me operatin’ contraption
+            masterpiece. Good on ye, for Lizardbeard be in a right mess. Turns out both Lizzy and that demented Russian
+            lass clutch all the blasted copyrights, and they’ve got their eyes on me hide. I be needin’ yer help to
+            wriggle outta this jam.<br><br>Steer yer ship with the LEFT and RIGHT arrow keys, dodge the cannon fire, and
+            plunder me pilfered booty. Snag ten pieces of me treasure, and I’ll see fit to reward ye with a treasure fit
+            for a true seadog! <br>
+            <button id="startBtn">Start Game</button>
     </div>
 
     <div id="gameContainer" style="display:none;">
@@ -117,9 +129,10 @@
     <div id="score" style="display:none;">Treasure: 0/10</div>
     <div id="winMessage" style="display:none;">
         <h2>Ahoy! You escaped!</h2>
-        <strong>Blimey! That were a close one. Lizardbeard ain’t goin’ to no prison, no sir! Thanks fer savin’ me hide. <br> 
+        <strong>Blimey! That were a close one. Lizardbeard ain’t goin’ to no prison, no sir! Thanks fer savin’ me hide.
+            <br>
             As promised, here be a chest o’ treasure for yer reward. Enjoy it, ye scallywag!
-        <a id="secretLink" href="#" target="_blank"><br><br>Treasure</a>
+            <a id="secretLink" href="#" target="_blank"><br><br>Treasure</a>
     </div>
 
     <script>
@@ -142,6 +155,7 @@
         let treasureInterval;
         let gameSpeed = 1.5;
         let keys = {};
+        let gameOver = false;
 
         function startGame() {
             rules.style.display = 'none';
@@ -155,14 +169,18 @@
             playerPos = 270;
             player.style.left = playerPos + 'px';
             gameSpeed = 1.5;
+            gameOver = false;
 
             gameInterval = setInterval(gameLoop, 20);
-            enemyInterval = setInterval(spawnEnemy, 2250); 
-            cannonInterval = setInterval(spawnCannonball, 1250); 
+            enemyInterval = setInterval(spawnEnemy, 2250);
+            cannonInterval = setInterval(spawnCannonball, 1250);
             treasureInterval = setInterval(spawnTreasure, 3000);
         }
 
         function endGame(win = false) {
+            if (gameOver) return;
+            gameOver = true;
+
             clearInterval(gameInterval);
             clearInterval(enemyInterval);
             clearInterval(cannonInterval);
@@ -173,16 +191,20 @@
             enemies = [];
             cannonballs = [];
             treasures = [];
+
             if (win) {
                 gameContainer.style.display = 'none';
                 scoreDisplay.style.display = 'none';
                 winMessage.style.display = 'block';
-                secretLink.href = "https://docs.google.com/presentation/d/1pOz1FYyXzuyk7L43lqaPFqC2RzKvuW6KdMu1FI1gVvc/edit?usp=sharing"; 
+                secretLink.href = "https://docs.google.com/presentation/d/1pOz1FYyXzuyk7L43lqaPFqC2RzKvuW6KdMu1FI1gVvc/edit?usp=sharing";
             } else {
                 createExplosion(playerPos, 340);
-                alert('Ye got hit! Try again, matey!');
-                rules.style.display = 'block';
-                gameContainer.style.display = 'none';
+                setTimeout(() => {
+                    alert('Ye got hit! Try again, matey!');
+                    rules.style.display = 'block';
+                    gameContainer.style.display = 'none';
+                    gameOver = false;
+                }, 300);
             }
         }
 
@@ -247,9 +269,9 @@
                     gameContainer.removeChild(c);
                     cannonballs.splice(cannonballs.indexOf(c), 1);
                 }
-                if (c.y + 20 > 340 && c.y < 400 && playerPos < parseInt(c.style.left) + 20 && playerPos + 60 > parseInt(c.style.left)) {
+                if (!gameOver && c.y + 20 > 340 && c.y < 400 && playerPos < parseInt(c.style.left) + 20 && playerPos + 60 > parseInt(c.style.left)) {
                     createExplosion(playerPos, 340);
-                    endGame();
+                    setTimeout(() => endGame(), 300);
                 }
             });
 
